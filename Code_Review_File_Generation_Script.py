@@ -1,8 +1,12 @@
+
+
+
 from github import Github
 import textwrap
 import sys 
 
-filename = '/Users/colinfritz/my_repos/CAN_Controller/Review_History'
+
+filename = '/Users/colinfritz/my_repos/CAN_Controller/Review_History' # Location for exporting Pull Request info
 
 
 with open(filename, 'w') as f:
@@ -17,17 +21,18 @@ with open(filename, 'w') as f:
 		print('Author: ' + pull.user.login)
 		for reviewer in pull.get_reviews():
 			reviewers.append(reviewer.user.login)
+		reviewers = set(reviewers)
 		print('Reviewers:', *reviewers)
 		print('ID: ' + str(pull.id))
 		print('Created: ' + str(pull.created_at))
 		print('Closed: ' + str(pull.closed_at))
 		print('Description: ' + pull.body)
 		print('Review Comments:')
-		print('Conversational Comments: ')
-		for review_comment in pull.get_comments():
+		for review_comment in pull.get_reviews():
 			print(review_comment.user.login + ' ')
 			print(textwrap.fill(review_comment.body, 50))
 			print(' ')
+		print('Conversational Comments: ')
 		for conversational_comment in pull.get_issue_comments():
 			print(conversational_comment.user.login + ' ')
 			print(textwrap.fill(conversational_comment.body, 50))

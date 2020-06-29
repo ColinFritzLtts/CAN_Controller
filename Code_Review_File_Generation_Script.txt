@@ -1,15 +1,9 @@
 from github import Github
 import textwrap
 import sys 
+
 filename = '/Users/colinfritz/my_repos/CAN_Controller/Review_History'
-def print_with_newline(comment,newline_insert):
-	if len(comment) <= newline_insert:
-		return comment
-	elif len(comment)>newline_insert:
-		lines = []
-		for i in range(0, len(comment), newline_insert):
-			lines.append(comment[i:i+newline_insert])
-		return '\n'.join(lines)
+
 
 with open(filename, 'w') as f:
 	sys.stdout = f
@@ -23,23 +17,25 @@ with open(filename, 'w') as f:
 		print('Author: ' + pull.user.login)
 		for reviewer in pull.get_reviews():
 			reviewers.append(reviewer.user.login)
+		reviewers =set(reviewers)
 		print('Reviewers:', *reviewers)
 		print('ID: ' + str(pull.id))
 		print('Created: ' + str(pull.created_at))
 		print('Closed: ' + str(pull.closed_at))
 		print('Description: ' + pull.body)
 		print('Review Comments:')
-		print('Conversational Comments: ')
-		for review_comment in pull.get_comments():
+		for review_comment in pull.get_reviews():
 			print(review_comment.user.login + ' ')
 			print(textwrap.fill(review_comment.body, 50))
 			print(' ')
+		print('Conversational Comments: ')
 		for conversational_comment in pull.get_issue_comments():
 			print(conversational_comment.user.login + ' ')
 			print(textwrap.fill(conversational_comment.body, 50))
 			print(' ')
 
 		print('------------------------- ' + pull.title + ' -------------------------')
+		reviewers = []
 		print('')
 		print('')
 		print('')
