@@ -41,17 +41,16 @@ def print_review_comments(pull_req_object):
 	
 	print('Review Comments: ')
 	for review_comment in pull_req_object.get_reviews():
-		print(review_comment.user.login + ' ')
+		print(review_comment.user.login + ' ' + str(review_comment.submitted_at))
 		comment=textwrap.fill(review_comment.body, width=50)
 		comment.encode('unicode_escape')
 		print(comment)
 		print(' ')
 	
-
 def print_conversational_comments(pull_req_object):
 	print('Conversational Comments: ')
 	for conversational_comment in pull_req_object.get_issue_comments():
-		print(conversational_comment.user.login + ' ')
+		print(conversational_comment.user.login + ' ' + str(conversational_comment.created_at))
 		print(textwrap.fill(conversational_comment.body, 50))
 		print(' ')
 
@@ -61,7 +60,12 @@ def print_bottom_border(pull_req_object):
 	print('')
 	print('')
 
+def print_merge_commit_sha(pull_req_object):
+	print('merge_commit_sha: ' + pull_req_object.merge_commit_sha)
 
+def print_changed_files(pull_req_object):
+	for file in pull_req_object.get_files():
+		print("file1: " + file.filename)
 
 filename = '/Users/colinfritz/my_repos/CAN_Controller/Review_History' # Location for exporting Pull Request info
 
@@ -79,14 +83,21 @@ with open(filename, 'w') as f:
 		print_author(pull)
 		print_reviewers(pull)
 		print_ID(pull)
+		print_merge_commit_sha(pull)
 		print_created(pull)
 		print_closed(pull)
 		print_description(pull)
 		print_review_comments(pull)
 		print_conversational_comments(pull)
+		print_changed_files(pull)
 		print_bottom_border(pull)
 
-
+"""
+Features to add:
+commit tag
+comment time stamps. 
+Files changed
+"""
 		# print('------------------------- ' + pull.title + ' -------------------------')
 		# print('Author: ' + pull.user.login)
 		# for reviewer in pull.get_reviews():
@@ -116,5 +127,3 @@ with open(filename, 'w') as f:
 
 
 		
-
-	print('progresssssjaksahs')
