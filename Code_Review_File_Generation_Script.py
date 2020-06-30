@@ -1,20 +1,23 @@
+"""
 
 
+"""
 
 from github import Github
 import textwrap
 import sys 
-
+def print_header(repo_object):
+	print('project_name: ' + repo_object.name)
 
 filename = '/Users/colinfritz/my_repos/CAN_Controller/Review_History' # Location for exporting Pull Request info
 
 
 with open(filename, 'w') as f:
+
 	sys.stdout = f
 	g = Github('colinfritzwork@gmail.com', 'Cougar@2013')
 	r=g.get_repo('ColinFritzltts/CAN_Controller')
-	print(r.name)
-	print(" ")
+	print_header(r)
 	reviewers = []
 	for pull in r.get_pulls('all'):
 		print('------------------------- ' + pull.title + ' -------------------------')
