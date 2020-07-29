@@ -58,13 +58,13 @@ reg [31:0] mask_id_one;
 reg [31:0] mask_id_two;
 reg [31:0] mask_id_three;
 reg [31:0] mask_id_four;
-reg can_ready_synched;
+wire can_ready_synched;
 
 localparam [2:0] IDLE = 0, PROCESSING = 1, ACCEPTMESSAGE =2, DISCARDMESSAGE =3;
 
 reg [2:0] ACCEPTANCE_FILTER_FSM_STATE;
 
-double_synchronizer can_synchronizer(.i_sys_clk(i_sys_clk), .i_reset(i_reset), .synched(can_ready_synched), .unsynched(i_can_ready));
+double_synchronizer can_synchronizer(.i_sys_clk(i_sys_clk), .i_reset(i_reset), .synched(can_ready_synched), .un_synched(i_can_ready));
 
 always @(posedge i_sys_clk, posedge i_reset)
 begin 
@@ -80,7 +80,7 @@ begin
         case(ACCEPTANCE_FILTER_FSM_STATE)
 				IDLE :
 				begin 
-				    o_rx_w_en <= 0;
+				    o_rx_w_en = 0;
 				    if (can_ready_synched == 1) 
 				    begin 
 				        ACCEPTANCE_FILTER_FSM_STATE<=PROCESSING;
@@ -129,21 +129,21 @@ begin
 				
 				ACCEPTMESSAGE : 
 				begin 
-				    o_rx_w_en <=1;
+				    o_rx_w_en = 1;
 				    o_rx_fifo_w_data <= i_rx_message;
 				    ACCEPTANCE_FILTER_FSM_STATE<= IDLE;
 				end
 				
 				DISCARDMESSAGE : 
 				begin 
-				    o_rx_w_en <= 0;
+				    o_rx_w_en = 0;
 				    ACCEPTANCE_FILTER_FSM_STATE<= IDLE;
 				end
         endcase
     end
 end
 
-always @(i_afir1, i_afir2, i_afir3, i_afir4, i_afmr1, i_afmr2, i_afmr3, i_afmr4, i_uaf1, i_uaf2, i_uaf3, i_uaf4)
+always @(i_afir1, i_afir2, i_afir3, i_afir4, i_afmr1, i_afmr2, i_afmr3, i_afmr4, i_uaf1, i_uaf2, i_uaf3, i_uaf4, i_rx_message)
 begin 
     if (i_uaf1 == 1)
     begin 
@@ -151,7 +151,7 @@ begin
     end
     else if (i_uaf1 == 0) 
     begin 
-    mask_msg_one <= 128'b0;
+    mask_msg_one <= 32'b0;
     end 
     if (i_uaf2 == 1)
     begin 
@@ -159,7 +159,7 @@ begin
     end
     else if (i_uaf2 == 0) 
     begin 
-    mask_msg_two <= 128'b0;
+    mask_msg_two <= 32'b0;
     end 
     if (i_uaf3 == 1)
     begin 
@@ -167,7 +167,7 @@ begin
     end
     else if (i_uaf3 == 0) 
     begin 
-    mask_msg_three <= 128'b0;
+    mask_msg_three <= 32'b0;
     end 
     if (i_uaf4 == 1)
     begin 
