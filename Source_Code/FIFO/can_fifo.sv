@@ -23,11 +23,11 @@
 module fifo #(parameter FIFO_DEPTH = 2, DATA_WIDTH = 128)
 // ----------- Port Declarations -------------------------------------------
     (
-    input wire [DATA_WIDTH-1 : 0] i_fifo_w_data,
-    input wire i_wr_en,
-    input wire i_r_en,
-    input wire i_reset,
-    input wire i_sys_clk,
+    input wire [DATA_WIDTH-1 : 0] i_fifo_w_data = 0,
+    input wire i_wr_en = 0,
+    input wire i_r_en = 0,
+    input wire i_reset = 0,
+    input wire i_sys_clk = 0,
     output reg [DATA_WIDTH-1 : 0] o_fifo_r_data,
     output reg o_full,
     output reg o_empty, 
@@ -47,6 +47,34 @@ module fifo #(parameter FIFO_DEPTH = 2, DATA_WIDTH = 128)
     reg [FIFO_DEPTH : 0] ptr_reg, ptr_next;
     reg ptr_add, ptr_sub;
 // --------------------------------------------------------------------------
+initial begin
+    for(integer i=0;i<DATA_WIDTH;i++) begin
+        for(integer j=0;j<FIFO_DEPTH;j++) begin
+            mem_array[i][j] = 1'b0;
+        end
+        r_ptr[i] = 1'b0;
+        w_ptr[i] = 1'b0;
+        r_ptr_next[i] = 1'b0;
+        w_ptr_next[i] = 1'b0;
+        q_reg[i] = 1'b0;
+        q_next[i] = 1'b0;
+        ptr_reg[i] = 1'b0; 
+        ptr_next[i] = 1'b0;
+        o_fifo_r_data[i] = 1'b0;
+    end
+    full_ff = 1'b0;
+    empty_ff = 1'b1;
+    full_ff_next = 1'b0;
+    empty_ff_next = 1'b0;
+    q_add = 1'b0;
+    q_sub = 1'b0;
+    ptr_add = 1'b0; 
+    ptr_sub = 1'b0;
+    o_full = 1'b0;
+    o_empty = 1'b0;
+    o_overflow = 1'b0;
+    o_underflow = 1'b0;
+end
 
 // Always block updating internal variables to next values
     always @ (posedge i_sys_clk)
