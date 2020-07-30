@@ -97,6 +97,7 @@ module fifo #(parameter FIFO_DEPTH = 2, DATA_WIDTH = 128)
                 if (r_ptr < FIFO_DEPTH-1) begin
                     if (ptr_reg > 0) begin
                         ptr_sub = 1'b1;
+						r_ptr_next = r_ptr + 1;
                     end
                     else begin
                         ptr_sub = 1'b0;
