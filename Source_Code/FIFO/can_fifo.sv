@@ -42,8 +42,6 @@ module fifo #(parameter FIFO_DEPTH = 2, DATA_WIDTH = 128)
     reg [FIFO_DEPTH-1 : 0] r_ptr_next, w_ptr_next;
     reg full_ff, empty_ff;
     reg full_ff_next, empty_ff_next;
-    reg [FIFO_DEPTH-1 : 0] q_reg, q_next;
-    reg q_add, q_sub;
     reg [FIFO_DEPTH-1 : 0] ptr_reg, ptr_next;
     reg ptr_add, ptr_sub;
 // --------------------------------------------------------------------------
