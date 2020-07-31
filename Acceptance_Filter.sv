@@ -62,154 +62,144 @@ wire can_ready_synched;
 
 localparam [2:0] IDLE = 0, PROCESSING = 1, ACCEPTMESSAGE =2, DISCARDMESSAGE =3;
 
-reg [2:0] ACCEPTANCE_FILTER_FSM_STATE;
+reg [2:0] int_state;
+reg [2:0] int_state_next;
+
 
 double_synchronizer can_synchronizer(.i_sys_clk(i_sys_clk), .i_reset(i_reset), .synched(can_ready_synched), .un_synched(i_can_ready));
 
-always @(posedge i_sys_clk, posedge i_reset)
-begin 
-    if (i_reset == 1) 
-    begin 
-        ACCEPTANCE_FILTER_FSM_STATE = IDLE;
-        o_rx_w_en = 0;
-        o_acfbsy = 0;
-        o_rx_fifo_w_data[127:0] = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+always @(int_state, i_reset, i_rx_message, can_ready_synched)
+begin  : NXT_STATE
+    if (i_reset == 1'b1) begin 
+        int_state_next = IDLE;
+        o_rx_w_en = 1'b0;
+        o_acfbsy = 1'b0;
+        o_rx_fifo_w_data[127:0] = 128'd0;
     end
-    else if (i_reset == 0);
-    begin 
-        case(ACCEPTANCE_FILTER_FSM_STATE)
-				IDLE :
-				begin 
-				    o_rx_w_en = 0;
-				    if (can_ready_synched == 1) 
-				    begin 
-				        ACCEPTANCE_FILTER_FSM_STATE<=PROCESSING;
+    else begin 
+        case(int_state)
+				IDLE : begin 
+				    o_rx_w_en = 1'b0;
+				    if (can_ready_synched == 1'b1) begin 
+				        int_state_next = PROCESSING;
 				    end
-				    else if (can_ready_synched == 0)
-				    begin 
-				         ACCEPTANCE_FILTER_FSM_STATE<=IDLE;
+				    else begin 
+				         int_state_next=IDLE;
 				    end
 				end
 				
-				PROCESSING : 
-				begin 
-				    if (mask_id_one !== 32'b0 && mask_msg_one !==32'b0 && i_uaf1 == 1 && mask_id_one == mask_msg_one) 
-				    begin 
-				        ACCEPTANCE_FILTER_FSM_STATE<= ACCEPTMESSAGE;
+				PROCESSING : begin 
+				    if (mask_id_one !== 32'b0 && mask_msg_one !==32'b0 && i_uaf1 == 1'b1 && mask_id_one == mask_msg_one) begin 
+				        int_state_next= ACCEPTMESSAGE;
 				    end
 				    
-				    else if (mask_id_two !== 32'b0 && mask_msg_two !==32'b0 && i_uaf2 == 1 && mask_id_two == mask_msg_two)
-				    begin 
-				        ACCEPTANCE_FILTER_FSM_STATE<= ACCEPTMESSAGE;
+				    else if (mask_id_two !== 32'b0 && mask_msg_two !==32'b0 && i_uaf2 == 1'b1 && mask_id_two == mask_msg_two) begin 
+				        int_state_next= ACCEPTMESSAGE;
 				    end
 				    
-				    else if (mask_id_three !== 32'b0 && mask_msg_three !==32'b0 && i_uaf3 == 1 && mask_id_three == mask_msg_three)
-				    begin 
-				        ACCEPTANCE_FILTER_FSM_STATE<= ACCEPTMESSAGE;
+				    else if (mask_id_three !== 32'b0 && mask_msg_three !==32'b0 && i_uaf3 == 1'b1 && mask_id_three == mask_msg_three) begin 
+				        int_state_next= ACCEPTMESSAGE;
 				    end
 				    
-			        else if (mask_id_four !== 32'b0 && mask_msg_four !==32'b0 && i_uaf4 == 1 && mask_id_four == mask_msg_four)
-				    begin 
-				        ACCEPTANCE_FILTER_FSM_STATE<= ACCEPTMESSAGE;
+			        else if (mask_id_four !== 32'b0 && mask_msg_four !==32'b0 && i_uaf4 == 1'b1 && mask_id_four == mask_msg_four) begin 
+				        int_state_next= ACCEPTMESSAGE;
 				    end
-				    else if (i_uaf1 == 0 && i_uaf2 == 0 && i_uaf3 == 0 && i_uaf4 == 0)
-				    begin 
-				        ACCEPTANCE_FILTER_FSM_STATE<= ACCEPTMESSAGE;
+				    else if (i_uaf1 == 1'b0 && i_uaf2 == 1'b0 && i_uaf3 == 1'b0 && i_uaf4 == 1'b0) begin 
+				        int_state_next= ACCEPTMESSAGE;
 				    end
-				    else if (mask_msg_one == 32'b0 && mask_id_one == 32'b0 && mask_msg_two == 32'b0 && mask_id_two == 32'b0 && mask_msg_three == 32'b0 && mask_id_three == 32'b0 && mask_msg_four == 32'b0 && mask_id_four == 32'b0)
-				    begin 
-				        ACCEPTANCE_FILTER_FSM_STATE<= ACCEPTMESSAGE;
+				    else if (mask_msg_one == 32'b0 && mask_id_one == 32'b0 && mask_msg_two == 32'b0 && mask_id_two == 32'b0 && mask_msg_three == 32'b0 && mask_id_three == 32'b0 && mask_msg_four == 32'b0 && mask_id_four == 32'b0) begin 
+				        int_state_next= ACCEPTMESSAGE;
 				    end
-				    else 
-				    begin 
-				        ACCEPTANCE_FILTER_FSM_STATE<= DISCARDMESSAGE;
+				    else begin 
+				        int_state_next= DISCARDMESSAGE;
 				    end
-				   
 				end
 				
-				ACCEPTMESSAGE : 
-				begin 
-				    o_rx_w_en = 1;
+				ACCEPTMESSAGE : begin 
+				    o_rx_w_en = 1'b1;
 				    o_rx_fifo_w_data <= i_rx_message;
-				    ACCEPTANCE_FILTER_FSM_STATE<= IDLE;
+				    int_state_next= IDLE;
 				end
 				
-				DISCARDMESSAGE : 
-				begin 
-				    o_rx_w_en = 0;
-				    ACCEPTANCE_FILTER_FSM_STATE<= IDLE;
+				DISCARDMESSAGE : begin 
+				    o_rx_w_en = 1'b0;
+				    int_state_next= IDLE;
+				end
+				
+				default : begin 
+				    o_rx_w_en = 1'b0;
+				    int_state_next= IDLE;
 				end
         endcase
     end
 end
 
+always @(posedge i_sys_clk, posedge i_reset)
+begin : CUR_STATE
+	if (i_reset == 1'b1) begin 
+        int_state = IDLE; 
+    end
+    else begin 
+        int_state <= int_state_next;
+	end
+end
+
 always @(i_afir1, i_afir2, i_afir3, i_afir4, i_afmr1, i_afmr2, i_afmr3, i_afmr4, i_uaf1, i_uaf2, i_uaf3, i_uaf4, i_rx_message)
 begin 
-    if (i_uaf1 == 1)
-    begin 
-    mask_msg_one <= i_afmr1 & i_rx_message[127:96];
+    if (i_uaf1 == 1'b1) begin 
+        mask_msg_one <= i_afmr1 & i_rx_message[127:96];
     end
-    else if (i_uaf1 == 0) 
-    begin 
-    mask_msg_one <= 32'b0;
-    end 
-    if (i_uaf2 == 1)
-    begin 
-    mask_msg_two <= i_afmr2 & i_rx_message[127:96];
-    end
-    else if (i_uaf2 == 0) 
-    begin 
-    mask_msg_two <= 32'b0;
-    end 
-    if (i_uaf3 == 1)
-    begin 
-    mask_msg_three <= i_afmr3 & i_rx_message[127:96];
-    end
-    else if (i_uaf3 == 0) 
-    begin 
-    mask_msg_three <= 32'b0;
-    end 
-    if (i_uaf4 == 1)
-    begin 
-    mask_msg_four <= i_afmr4 & i_rx_message[127:96];
-    end
-    else if (i_uaf4 == 0) 
-    begin 
-    mask_msg_four <= 32'b0;
+    else begin 
+        mask_msg_one <= 32'b0;
     end 
     
+    if (i_uaf2 == 1'b1) begin 
+        mask_msg_two <= i_afmr2 & i_rx_message[127:96];
+    end
+    else begin 
+        mask_msg_two <= 32'b0;
+    end
+     
+    if (i_uaf3 == 1'b1) begin 
+        mask_msg_three <= i_afmr3 & i_rx_message[127:96];
+    end
+    else begin 
+        mask_msg_three <= 32'b0;
+    end 
     
-    if (i_uaf1 == 1) 
-    begin 
-    mask_id_one <= i_afir1 & i_afmr1;
+    if (i_uaf4 == 1'b1) begin 
+        mask_msg_four <= i_afmr4 & i_rx_message[127:96];
     end
-    else if (i_uaf1 == 0) 
-    begin 
-    mask_id_one <= 32'b0;
+    else begin 
+        mask_msg_four <= 32'b0;
     end
-    if (i_uaf2 == 1) 
-    begin 
-    mask_id_two <= i_afir2 & i_afmr2;
+     
+    if (i_uaf1 == 1'b1) begin 
+        mask_id_one <= i_afir1 & i_afmr1;
     end
-    else if (i_uaf2 == 0) 
-    begin 
-    mask_id_two <= 32'b0;
+    else begin 
+        mask_id_one <= 32'b0;
     end
-    if (i_uaf3 == 1) 
-    begin 
-    mask_id_three <= i_afir3 & i_afmr3;
+    
+    if (i_uaf2 == 1'b1) begin 
+        mask_id_two <= i_afir2 & i_afmr2;
     end
-    else if (i_uaf3 == 0) 
-    begin 
-    mask_id_three <= 32'b0;
+    else begin 
+        mask_id_two <= 32'b0;
     end
-    if (i_uaf4 == 1) 
-    begin 
-    mask_id_four <= i_afir4 & i_afmr4;
+    
+    if (i_uaf3 == 1'b1) begin 
+        mask_id_three <= i_afir3 & i_afmr3;
     end
-    else if (i_uaf4 == 0) 
-    begin 
-    mask_id_four <= 32'b0;
+    else begin 
+        mask_id_three <= 32'b0;
+    end
+    
+    if (i_uaf4 == 1'b1) begin 
+        mask_id_four <= i_afir4 & i_afmr4;
+    end
+    else begin 
+        mask_id_four <= 32'b0;
     end
 end
 
